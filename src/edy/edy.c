@@ -140,7 +140,7 @@ static void edy_dump(uint8 *data)
 static void analyzeTime(int n, struct tm *t)
 {
     time_t  tt;
-    struct  tm *t2;
+	struct  tm t2 = { 0 };
 
     // calculate day
     memset(t, 0, sizeof(*t));
@@ -155,8 +155,8 @@ static void analyzeTime(int n, struct tm *t)
     tt = mktime(t);
     tt += (n >> 17) * 24 * 60 * 60;
 
-    t2 = localtime(&tt);
-    memcpy(t, t2, sizeof(*t));
+    localtime_s(&t2, &tt);
+    memcpy(t, &t2, sizeof(*t));
 
     t->tm_year += 1900;
     t->tm_mon += 1;

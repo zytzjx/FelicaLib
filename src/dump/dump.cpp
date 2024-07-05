@@ -39,20 +39,172 @@
 #include <stdio.h>
 #include <windows.h>
 #include <tchar.h>
+#include <locale>
+#include <codecvt>
 #include <locale.h>
+#include <iostream>
+#include "hookapi.h"
 
 #include "felicalib.h"
+
+#include "cxxopts.hpp"
+
+#ifdef _WIN64
+#pragma comment(lib, "E:\\Works\\Felica\\Detours\\lib.X64\\detours.lib")
+//#pragma comment(lib, "E:\\Works\\Felica\\Detours\\lib.X64\\syelog.lib")
+#else
+#pragma comment(lib, "E:\\Works\\Felica\\Detours\\lib.X32\\detours.lib")
+//#pragma comment(lib, "E:\\Works\\Felica\\Detours\\lib.X32\\syelog.lib")
+#endif
 
 static void printserviceinfo(uint16 s);
 static void hexdump(uint8* addr, int n);
 
+/*
+//////////////////////////////////////////////////////////////////////////////
+//
+extern "C" {
+	HANDLE(WINAPI * Real_CreateFileW)(LPCWSTR a0,
+		DWORD a1,
+		DWORD a2,
+		LPSECURITY_ATTRIBUTES a3,
+		DWORD a4,
+		DWORD a5,
+		HANDLE a6)
+		= CreateFileW;
+
+	HANDLE(WINAPI * Real_CreateFileA)(LPCSTR a0,
+		DWORD a1,
+		DWORD a2,
+		LPSECURITY_ATTRIBUTES a3,
+		DWORD a4,
+		DWORD a5,
+		HANDLE a6)
+		= CreateFileA;
+}
+
+
+HANDLE __stdcall Mine_CreateFileA(LPCSTR a0,
+	DWORD a1,
+	DWORD a2,
+	LPSECURITY_ATTRIBUTES a3,
+	DWORD a4,
+	DWORD a5,
+	HANDLE a6)
+{
+	CHAR filename[1024] = { 0 };
+	sprintf_s(filename, "%s", a0);
+	OutputDebugStringA(filename);
+
+	HANDLE rv = 0;
+	__try {
+		rv = Real_CreateFileA(a0, a1, a2, a3, a4, a5, a6);
+	}
+	__finally {
+		sprintf_s(filename, "%s==>%d", a0, GetLastError());
+		OutputDebugStringA(filename);
+	};
+	return rv;
+}
+
+HANDLE __stdcall Mine_CreateFileW(LPCWSTR a0,
+	DWORD a1,
+	DWORD a2,
+	LPSECURITY_ATTRIBUTES a3,
+	DWORD a4,
+	DWORD a5,
+	HANDLE a6)
+{
+	TCHAR filename[1024] = { 0 };
+	swprintf_s(filename, L"%s", a0);
+	OutputDebugStringW(filename);
+
+	HANDLE rv = 0;
+	__try {
+		rv = Real_CreateFileW(a0, a1, a2, a3, a4, a5, a6);
+	}
+	__finally {
+		swprintf_s(filename, L"%s==>%d", a0, GetLastError());
+		OutputDebugStringW(filename);
+	};
+	return rv;
+}
+
+// Function to set up the hook
+void SetupHook() {
+	DetourRestoreAfterWith();
+	DetourTransactionBegin();
+	DetourUpdateThread(GetCurrentThread());
+	DetourAttach(&(PVOID&)Real_CreateFileW, Mine_CreateFileW);
+	DetourAttach(&(PVOID&)Real_CreateFileA, Mine_CreateFileA);
+	DetourTransactionCommit();
+}
+
+// Function to remove the hook
+void RemoveHook() {
+	DetourTransactionBegin();
+	DetourUpdateThread(GetCurrentThread());
+	DetourDetach(&(PVOID&)Real_CreateFileW, Mine_CreateFileW);
+	DetourDetach(&(PVOID&)Real_CreateFileA, Mine_CreateFileA);
+	DetourTransactionCommit();
+}
+*/
+
+std::wstring devicename;
+std::string devicenameA;
+std::string WstringToString(const std::wstring& wstr)
+{
+	std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+	return converter.to_bytes(wstr);
+}
+
 int _tmain(int argc, _TCHAR *argv[])
 {
+	cxxopts::Options options(_T("Dump"), _T("Check whether Felica has data"));
+	
+	options.add_options()
+		(_T("label"), _T("device label"), cxxopts::value<int>())
+		(_T("hubname"), _T("usb hub name"), cxxopts::value<std::wstring>())
+		(_T("hubport"), _T("usb hub port"), cxxopts::value<int>()->default_value(_T("0")))
+		(_T("h,help"), _T("Print usage:\n -hubname -hubport -label"));
+
+	
+	auto result = options.parse(argc, argv);
+	
+	if (result.count(_T("help")))
+	{
+		std::wcout << options.help() << std::endl;
+		exit(0);
+	}
+	
+	std::wstring hubname;
+	if (result.count(_T("hubname")))
+		hubname = result[_T("hubname")].as<std::wstring>();
+	int hubport = result[_T("hubport")].as<int>();
+	int label = result[_T("label")].as<int>();
+	bool busehubinfo = false;
+
+	//std::wcout << hubname << "@" << hubport << _T("           ") << label << std::endl;
+	//L"USB#VID_2109&PID_2813#6&3183d08&0&1#{f18a0e88-c30c-11d0-8815-00a0c906bed8}"
+	if (!hubname.empty() && hubport!=0){
+		PrintDeivce(hubname, hubport, devicename);
+		std::wcout <<"get device path:" << devicename << std::endl;
+		devicenameA = WstringToString(devicename);
+		
+		busehubinfo = !devicename.empty();
+	}
+
+	//return 0;
     pasori* p;
     felica  *f, *f2;
     int i, j, k;
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 
-    setlocale(LC_ALL, "Japanese");
+	setlocale(LC_ALL, "Japanese");
+
+	if (busehubinfo) {
+		SetupHook();
+	}
 
     p = pasori_open(NULL);
     if (!p)
@@ -79,8 +231,13 @@ int _tmain(int argc, _TCHAR *argv[])
     f = felica_enum_systemcode(p);
     if (!f)
     {
+		SetConsoleTextAttribute(hConsole, FOREGROUND_RED);
+		_tprintf(_T("Felicastatus=notfindfelica\n"));
+		SetConsoleTextAttribute(hConsole, FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED);
         exit(1);
     }
+
+	BOOL bServiceData = FALSE;
 
     for (i = 0; i < f->num_system_code; i++)
     {
@@ -116,15 +273,30 @@ int _tmain(int argc, _TCHAR *argv[])
                 _tprintf(_T("%04X:%04X "), service, k);
                 hexdump(data, 16);
                 _tprintf(_T("\n"));
+				bServiceData = TRUE;
             }
         }
         _tprintf(_T("\n"));
         felica_free(f2);
     }
 
+	if (f->num_system_code > 0 && bServiceData){
+		SetConsoleTextAttribute(hConsole, FOREGROUND_BLUE);
+		_tprintf(_T("Felicastatus=foundfelica\n"));
+		SetConsoleTextAttribute(hConsole, FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED);
+	}
+	else{
+		SetConsoleTextAttribute(hConsole, FOREGROUND_RED);
+		_tprintf(_T("Felicastatus=notfindfelica\n"));
+		SetConsoleTextAttribute(hConsole, FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED);
+	}
+
     felica_free(f);
     pasori_close(p);
 
+	if (busehubinfo) {
+		RemoveHook();
+	}
     return 0;
 }
 

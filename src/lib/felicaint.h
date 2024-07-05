@@ -1,4 +1,4 @@
-/*
+ï»¿/*
  felicalib - FeliCa access wrapper library
 
  Copyright (c) 2007, Takuya Murakami, All rights reserved.
@@ -33,82 +33,82 @@
 /**
   @file felicaint.h
 
-  “à•”ƒwƒbƒ_
+  å†…éƒ¨ãƒ˜ãƒƒãƒ€
 */
 
 #ifndef        _FELICAINT_H
 #define        _FELICAINT_H
 
-/** @brief Polling \‘¢‘Ì */
+/** @brief Polling æ§‹é€ ä½“ */
 typedef struct {
-    uint8* system_code;         ///< ƒVƒXƒeƒ€ƒR[ƒh (2byte, ƒlƒbƒgƒ[ƒNƒoƒCƒgƒI[ƒ_)
-    uint8 time_slot;            ///< ƒ^ƒCƒ€ƒXƒƒbƒg (0x00, 0x01, 0x03, 0x07, 0x0f ‚Ì‚¢‚¸‚ê‚©)
+    uint8* system_code;         ///< ã‚·ã‚¹ãƒ†ãƒ ã‚³ãƒ¼ãƒ‰ (2byte, ãƒãƒƒãƒˆãƒ¯ãƒ¼ã‚¯ãƒã‚¤ãƒˆã‚ªãƒ¼ãƒ€)
+    uint8 time_slot;            ///< ã‚¿ã‚¤ãƒ ã‚¹ãƒ­ãƒƒãƒˆ (0x00, 0x01, 0x03, 0x07, 0x0f ã®ã„ãšã‚Œã‹)
 } POLLING;
 
-/** @brief ƒJ[ƒhî•ñ\‘¢‘Ì */
+/** @brief ã‚«ãƒ¼ãƒ‰æƒ…å ±æ§‹é€ ä½“ */
 typedef struct {
-    uint8* card_idm;                    ///< ƒJ[ƒh‚Ì IDm (8byte)
-    uint8* card_pmm;                    ///< ƒJ[ƒh‚Ì PMm (8byte)
+    uint8* card_idm;                    ///< ã‚«ãƒ¼ãƒ‰ã® IDm (8byte)
+    uint8* card_pmm;                    ///< ã‚«ãƒ¼ãƒ‰ã® PMm (8byte)
 } CARD_INFO;
 
-/** @brief read_block_without_encryption “ü—Í\‘¢‘Ì */
+/** @brief read_block_without_encryption å…¥åŠ›æ§‹é€ ä½“ */
 typedef struct {
     uint8 *card_idm;                    ///< IDm
-    uint8 number_of_services;           ///< ƒT[ƒrƒXƒR[ƒh”
-    uint8 *service_code_list;           ///< ƒT[ƒrƒXƒR[ƒhƒŠƒXƒg
-    uint8 number_of_blocks;             ///< ƒuƒƒbƒN”
-    uint8 *block_list;                  ///< ƒuƒƒbƒNƒŠƒXƒg
+    uint8 number_of_services;           ///< ã‚µãƒ¼ãƒ“ã‚¹ã‚³ãƒ¼ãƒ‰æ•°
+    uint8 *service_code_list;           ///< ã‚µãƒ¼ãƒ“ã‚¹ã‚³ãƒ¼ãƒ‰ãƒªã‚¹ãƒˆ
+    uint8 number_of_blocks;             ///< ãƒ–ãƒ­ãƒƒã‚¯æ•°
+    uint8 *block_list;                  ///< ãƒ–ãƒ­ãƒƒã‚¯ãƒªã‚¹ãƒˆ
 } INSTR_READ_BLOCK;
 
-/** @brief read_block_without_encryption o—Í\‘¢‘Ì */
+/** @brief read_block_without_encryption å‡ºåŠ›æ§‹é€ ä½“ */
 typedef struct {
-    uint8 *status_flag_1;               ///< ƒXƒe[ƒ^ƒXƒtƒ‰ƒO1
-    uint8 *status_flag_2;               ///< ƒXƒe[ƒ^ƒXƒtƒ‰ƒO2
-    uint8 *result_number_of_blocks;     ///< ƒf[ƒ^ƒuƒƒbƒN”
-    uint8 *block_data;                  ///< ƒf[ƒ^ƒuƒƒbƒN
+    uint8 *status_flag_1;               ///< ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ãƒ•ãƒ©ã‚°1
+    uint8 *status_flag_2;               ///< ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ãƒ•ãƒ©ã‚°2
+    uint8 *result_number_of_blocks;     ///< ãƒ‡ãƒ¼ã‚¿ãƒ–ãƒ­ãƒƒã‚¯æ•°
+    uint8 *block_data;                  ///< ãƒ‡ãƒ¼ã‚¿ãƒ–ãƒ­ãƒƒã‚¯
 } OUTSTR_READ_BLOCK;
 
-/** @brief write_block_without_encryption “ü—Í\‘¢‘Ì */
+/** @brief write_block_without_encryption å…¥åŠ›æ§‹é€ ä½“ */
 typedef struct {
     uint8 *card_idm;                    ///< IDm
-    uint8 number_of_services;           ///< ƒT[ƒrƒXƒR[ƒh”
-    uint8 *service_code_list;           ///< ƒT[ƒrƒXƒR[ƒhƒŠƒXƒg
-    uint8 number_of_blocks;             ///< ƒuƒƒbƒN”
-    uint8 *block_list;                  ///< ƒuƒƒbƒNƒŠƒXƒg
-    uint8 *block_data;                  ///< ‘‚«‚İƒf[ƒ^(16byte)
+    uint8 number_of_services;           ///< ã‚µãƒ¼ãƒ“ã‚¹ã‚³ãƒ¼ãƒ‰æ•°
+    uint8 *service_code_list;           ///< ã‚µãƒ¼ãƒ“ã‚¹ã‚³ãƒ¼ãƒ‰ãƒªã‚¹ãƒˆ
+    uint8 number_of_blocks;             ///< ãƒ–ãƒ­ãƒƒã‚¯æ•°
+    uint8 *block_list;                  ///< ãƒ–ãƒ­ãƒƒã‚¯ãƒªã‚¹ãƒˆ
+    uint8 *block_data;                  ///< æ›¸ãè¾¼ã¿ãƒ‡ãƒ¼ã‚¿(16byte)
 } INSTR_WRITE_BLOCK;                        
 
-/** @brief read_block_without_encryption o—Í\‘¢‘Ì */
+/** @brief read_block_without_encryption å‡ºåŠ›æ§‹é€ ä½“ */
 typedef struct {
     uint8 *status_flag_1;
     uint8 *status_flag_2;
 } OUTSTR_WRITE_BLOCK;
 
-/** @brief polling_and_request_system_code “ü—Í\‘¢‘Ì */
+/** @brief polling_and_request_system_code å…¥åŠ›æ§‹é€ ä½“ */
 typedef struct {
     uint8 *card_idm;                    ///< IDm
 } INSTR_REQ_SYSTEM_CODE;
 
-/** @brief polling_and_request_system_code o—Í\‘¢‘Ì */
+/** @brief polling_and_request_system_code å‡ºåŠ›æ§‹é€ ä½“ */
 typedef struct {
-    uint8 number_of_system_codes;       ///< ƒVƒXƒeƒ€ƒR[ƒh”
-    uint8 *system_code_list;            ///< ƒVƒXƒeƒ€ƒR[ƒh”z—ñ
+    uint8 number_of_system_codes;       ///< ã‚·ã‚¹ãƒ†ãƒ ã‚³ãƒ¼ãƒ‰æ•°
+    uint8 *system_code_list;            ///< ã‚·ã‚¹ãƒ†ãƒ ã‚³ãƒ¼ãƒ‰é…åˆ—
 } OUTSTR_REQ_SYSTEM_CODE;
 
-/** @brief polling_and_search_service_code “ü—Í\‘¢‘Ì */
+/** @brief polling_and_search_service_code å…¥åŠ›æ§‹é€ ä½“ */
 typedef struct {
-    int buffer_size_of_area_codes;      ///< ƒGƒŠƒAƒR[ƒhƒoƒbƒtƒ@ƒTƒCƒY
-    int buffer_size_of_service_codes;   ///< ƒT[ƒrƒXƒR[ƒhƒoƒbƒtƒ@ƒTƒCƒY
-    int offset_of_area_service_index;   ///< ƒGƒŠƒAƒT[ƒrƒXƒIƒtƒZƒbƒg(?)
+    int buffer_size_of_area_codes;      ///< ã‚¨ãƒªã‚¢ã‚³ãƒ¼ãƒ‰ãƒãƒƒãƒ•ã‚¡ã‚µã‚¤ã‚º
+    int buffer_size_of_service_codes;   ///< ã‚µãƒ¼ãƒ“ã‚¹ã‚³ãƒ¼ãƒ‰ãƒãƒƒãƒ•ã‚¡ã‚µã‚¤ã‚º
+    int offset_of_area_service_index;   ///< ã‚¨ãƒªã‚¢ã‚µãƒ¼ãƒ“ã‚¹ã‚ªãƒ•ã‚»ãƒƒãƒˆ(?)
 } INSTR_SEARCH_SERVICE;
 
-/** @brief polling_and_search_service_code o—Í\‘¢‘Ì */
+/** @brief polling_and_search_service_code å‡ºåŠ›æ§‹é€ ä½“ */
 typedef struct {
-    int num_service_codes;              ///< ƒT[ƒrƒXƒR[ƒh”
-    uint8 *service_code_list;           ///< ƒT[ƒrƒXƒR[ƒh”z—ñ
-    int num_area_codes;                 ///< ƒGƒŠƒAƒR[ƒh”
-    uint8 *area_code_list;              ///< ƒGƒŠƒAƒR[ƒh”z—ñ
-    uint8 *end_service_code_list;       ///< ƒGƒ“ƒhƒT[ƒrƒXƒR[ƒh”z—ñ
+    int num_service_codes;              ///< ã‚µãƒ¼ãƒ“ã‚¹ã‚³ãƒ¼ãƒ‰æ•°
+    uint8 *service_code_list;           ///< ã‚µãƒ¼ãƒ“ã‚¹ã‚³ãƒ¼ãƒ‰é…åˆ—
+    int num_area_codes;                 ///< ã‚¨ãƒªã‚¢ã‚³ãƒ¼ãƒ‰æ•°
+    uint8 *area_code_list;              ///< ã‚¨ãƒªã‚¢ã‚³ãƒ¼ãƒ‰é…åˆ—
+    uint8 *end_service_code_list;       ///< ã‚¨ãƒ³ãƒ‰ã‚µãƒ¼ãƒ“ã‚¹ã‚³ãƒ¼ãƒ‰é…åˆ—
 } OUTSTR_SEARCH_SERVICE;
 
 /* DLL entries */
@@ -126,12 +126,12 @@ typedef BOOL (*write_block_without_encryption_t)(INSTR_WRITE_BLOCK *, OUTSTR_WRI
 
 /* structures */
 /**
-   @brief PaSoRi ƒnƒ“ƒhƒ‹
+   @brief PaSoRi ãƒãƒ³ãƒ‰ãƒ«
 
-   felica.dll ‚Ì DLL ƒnƒ“ƒhƒ‹A‚¨‚æ‚Ñ DLL ‚ÌƒGƒ“ƒgƒŠƒ|ƒCƒ“ƒg‚ğ•Û‚·‚éB
+   felica.dll ã® DLL ãƒãƒ³ãƒ‰ãƒ«ã€ãŠã‚ˆã³ DLL ã®ã‚¨ãƒ³ãƒˆãƒªãƒã‚¤ãƒ³ãƒˆã‚’ä¿æŒã™ã‚‹ã€‚
 */
 struct strpasori {
-    HINSTANCE hInstDLL;         ///< DLL ƒnƒ“ƒhƒ‹
+    HINSTANCE hInstDLL;         ///< DLL ãƒãƒ³ãƒ‰ãƒ«
 
 #define declare_entry(f)        f ## _t f
     declare_entry(initialize_library);

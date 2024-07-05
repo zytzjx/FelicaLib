@@ -1,4 +1,4 @@
-/*
+ï»¿/*
  felicalib - FeliCa access wrapper library
 
  Copyright (c) 2007, Takuya Murakami, All rights reserved.
@@ -33,12 +33,12 @@
 /**
   @file felicalib.h
 
-  ƒƒCƒ“ƒwƒbƒ_
+  ãƒ¡ã‚¤ãƒ³ãƒ˜ãƒƒãƒ€
 */
 /**
    @mainpage
 
-   API d—l‚É‚Â‚¢‚Ä‚ÍA felicalib.h ‚ğQÆ‚Ì‚±‚ÆB
+   API ä»•æ§˜ã«ã¤ã„ã¦ã¯ã€ felicalib.h ã‚’å‚ç…§ã®ã“ã¨ã€‚
 */
 #ifndef _FELICALIB_H
 #define        _FELICALIB_H
@@ -56,41 +56,41 @@ typedef struct strpasori pasori;
 #define MAX_SERVICE_CODE        256
 
 /**
-   @brief FeliCa ƒnƒ“ƒhƒ‹
+   @brief FeliCa ãƒãƒ³ãƒ‰ãƒ«
 
-   FeliCa ‚Ìî•ñ‚ğŠi”[‚·‚é\‘¢‘Ì
+   FeliCa ã®æƒ…å ±ã‚’æ ¼ç´ã™ã‚‹æ§‹é€ ä½“
 */
 typedef struct strfelica {
-    pasori *p;          /**< PaSoRi ƒnƒ“ƒhƒ‹ */
-    uint16 systemcode;  /**< ƒVƒXƒeƒ€ƒR[ƒh */
+    pasori *p;          /**< PaSoRi ãƒãƒ³ãƒ‰ãƒ« */
+    uint16 systemcode;  /**< ã‚·ã‚¹ãƒ†ãƒ ã‚³ãƒ¼ãƒ‰ */
     uint8 IDm[8];       /**< IDm */
     uint8 PMm[8];       /**< PMm */
 
     /* systemcode */
-    uint8 num_system_code;                      /**< —ñ‹“ƒVƒXƒeƒ€ƒR[ƒh” */
-    uint16 system_code[MAX_SYSTEM_CODE];        /**< —ñ‹“ƒVƒXƒeƒ€ƒR[ƒh */
+    uint8 num_system_code;                      /**< åˆ—æŒ™ã‚·ã‚¹ãƒ†ãƒ ã‚³ãƒ¼ãƒ‰æ•° */
+    uint16 system_code[MAX_SYSTEM_CODE];        /**< åˆ—æŒ™ã‚·ã‚¹ãƒ†ãƒ ã‚³ãƒ¼ãƒ‰ */
 
     /* area/service codes */
-    uint8 num_area_code;                        /**< ƒGƒŠƒAƒR[ƒh” */
-    uint16 area_code[MAX_AREA_CODE];            /**< ƒGƒŠƒAƒR[ƒh */
-    uint16 end_service_code[MAX_AREA_CODE];     /**< ƒGƒ“ƒhƒT[ƒrƒXƒR[ƒh */
+    uint8 num_area_code;                        /**< ã‚¨ãƒªã‚¢ã‚³ãƒ¼ãƒ‰æ•° */
+    uint16 area_code[MAX_AREA_CODE];            /**< ã‚¨ãƒªã‚¢ã‚³ãƒ¼ãƒ‰ */
+    uint16 end_service_code[MAX_AREA_CODE];     /**< ã‚¨ãƒ³ãƒ‰ã‚µãƒ¼ãƒ“ã‚¹ã‚³ãƒ¼ãƒ‰ */
 
-    uint8 num_service_code;                     /**< ƒT[ƒrƒXƒR[ƒh” */
-    uint16 service_code[MAX_SERVICE_CODE];      /**< ƒT[ƒrƒXƒR[ƒh */
+    uint8 num_service_code;                     /**< ã‚µãƒ¼ãƒ“ã‚¹ã‚³ãƒ¼ãƒ‰æ•° */
+    uint16 service_code[MAX_SERVICE_CODE];      /**< ã‚µãƒ¼ãƒ“ã‚¹ã‚³ãƒ¼ãƒ‰ */
 } felica;
 
 /* constants */
-/* ƒVƒXƒeƒ€ƒR[ƒh (ƒlƒbƒgƒ[ƒNƒoƒCƒgƒI[ƒ_/ƒrƒbƒNƒGƒ“ƒfƒBƒAƒ“‚Å•\‹L) */
+/* ã‚·ã‚¹ãƒ†ãƒ ã‚³ãƒ¼ãƒ‰ (ãƒãƒƒãƒˆãƒ¯ãƒ¼ã‚¯ãƒã‚¤ãƒˆã‚ªãƒ¼ãƒ€/ãƒ“ãƒƒã‚¯ã‚¨ãƒ³ãƒ‡ã‚£ã‚¢ãƒ³ã§è¡¨è¨˜) */
 #define POLLING_ANY     0xffff
-#define POLLING_EDY     0xfe00  /**< ƒVƒXƒeƒ€ƒR[ƒh: ‹¤’Ê—Ìˆæ (Edy ‚È‚Ç‚ªg—p) */
-#define POLLING_SUICA   0x0003  /**< ƒVƒXƒeƒ€ƒR[ƒh: ƒTƒCƒoƒl—Ìˆæ */
+#define POLLING_EDY     0xfe00  /**< ã‚·ã‚¹ãƒ†ãƒ ã‚³ãƒ¼ãƒ‰: å…±é€šé ˜åŸŸ (Edy ãªã©ãŒä½¿ç”¨) */
+#define POLLING_SUICA   0x0003  /**< ã‚·ã‚¹ãƒ†ãƒ ã‚³ãƒ¼ãƒ‰: ã‚µã‚¤ãƒãƒé ˜åŸŸ */
 
 /* endian */
-/** ƒoƒCƒgƒI[ƒ_•ÏŠ·(16bit) */
+/** ãƒã‚¤ãƒˆã‚ªãƒ¼ãƒ€å¤‰æ›(16bit) */
 #define        SW2B(x)          (((x) >> 8) & 0xff | ((x) << 8) & 0xff00)
-/** ƒlƒbƒgƒ[ƒNƒoƒCƒgƒI[ƒ_‚©‚çƒzƒXƒgƒoƒCƒgƒI[ƒ_‚Ö‚Ì•ÏŠ·(16bit) */
+/** ãƒãƒƒãƒˆãƒ¯ãƒ¼ã‚¯ãƒã‚¤ãƒˆã‚ªãƒ¼ãƒ€ã‹ã‚‰ãƒ›ã‚¹ãƒˆãƒã‚¤ãƒˆã‚ªãƒ¼ãƒ€ã¸ã®å¤‰æ›(16bit) */
 #define        N2HS(x)          SW2B(x)
-/** ƒzƒXƒgƒoƒCƒgƒI[ƒ_‚©‚çƒlƒbƒgƒ[ƒNƒoƒCƒgƒI[ƒ_‚Ö‚Ì•ÏŠ·(16bit) */
+/** ãƒ›ã‚¹ãƒˆãƒã‚¤ãƒˆã‚ªãƒ¼ãƒ€ã‹ã‚‰ãƒãƒƒãƒˆãƒ¯ãƒ¼ã‚¯ãƒã‚¤ãƒˆã‚ªãƒ¼ãƒ€ã¸ã®å¤‰æ›(16bit) */
 #define        H2NS(x)          SW2B(x)
 
 /* APIs */
