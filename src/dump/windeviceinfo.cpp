@@ -3,7 +3,8 @@
 #include <setupapi.h>
 #include <iostream>
 #include <vector>
-#include <list>
+#include <sstream>
+#include <iomanip>
 #include <algorithm>
 #include <initguid.h>
 #include <devpkey.h>
@@ -230,7 +231,7 @@ int PrintDeivce(std::wstring hubname, int hubport, std::wstring &devicepath) {
 	SP_DEVICE_INTERFACE_DATA DeviceInterfaceData;
 	DeviceInterfaceData.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
 
-	extern std::list<std::string> FalicaSymblinks;
+	//extern int IndexSymblinks;
 
 	for (DWORD i = 0; SetupDiEnumDeviceInterfaces(DeviceInfoSet, NULL, &InterfaceClassGuid, i, &DeviceInterfaceData); ++i) {
 		// Get the required buffer size
@@ -248,7 +249,11 @@ int PrintDeivce(std::wstring hubname, int hubport, std::wstring &devicepath) {
 		if (SetupDiGetDeviceInterfaceDetail(DeviceInfoSet, &DeviceInterfaceData, DeviceInterfaceDetailData, requiredSize, NULL, &devInfoData)) {
 			std::wcout << L"Device Path: " << DeviceInterfaceDetailData->DevicePath << std::endl;
 			devicepath = DeviceInterfaceDetailData->DevicePath;
-			FalicaSymblinks.push_back(toUTF8String(devicepath));
+			std::wstringstream wss;
+			wss << std::setw(2) << std::setfill(L'0') << i;
+			devicepath += _T("\\U*")+wss.str();
+			//FalicaSymblinks.push_back(toUTF8String(devicepath));
+			//IndexSymblinks++;
 			DEVPROPTYPE devPropType;
 			if (SetupDiGetDeviceProperty(
 				DeviceInfoSet,
