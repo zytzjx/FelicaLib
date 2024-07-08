@@ -153,8 +153,9 @@ int GetDeviceLocationPaths(TCHAR *HubName, std::wstring &sLocpath)
 					{
 						TCHAR *instanceid = (TCHAR *)(b);
 						sLocpath = instanceid;
-						std::wcout << sLocpath.c_str() << std::endl;
-						DWORD dwoffset = 0;
+						//std::wcout << sLocpath.c_str() << std::endl;
+						logIt(_T("found: %s"), instanceid);
+						/*DWORD dwoffset = 0;
 						BOOL bFind = FALSE;
 						while (instanceid != NULL && _tcslen(instanceid) > 0)
 						{
@@ -162,26 +163,29 @@ int GetDeviceLocationPaths(TCHAR *HubName, std::wstring &sLocpath)
 
 							dwoffset += _tcslen(instanceid) + 1;
 							instanceid = (TCHAR *)b + dwoffset;
-						}
+						}*/
 						nRet = ERROR_SUCCESS;
 					}
 				}
 				else
 				{
 					nRet = GetLastError();
-					std::wcout << L"get hub location paths failed: " << nRet << std::endl;
+					//std::wcout << L"get hub location paths failed: " << nRet << std::endl;
+					logIt(_T("get hub location paths failed: %d"), nRet);
 				}
 			}
 			else
 			{
 				//nRet = GetLastError();
-				std::wcout << L"get hub SetupDiGetDeviceInterfaceDetail failed: " << nRet << std::endl;
+				//std::wcout << L"get hub SetupDiGetDeviceInterfaceDetail failed: " << nRet << std::endl;
+				logIt(_T("get hub SetupDiGetDeviceInterfaceDetail failed: %d"), nRet);
 			}
 		}
 		else
 		{
 			nRet = GetLastError();
-			std::wcout << L"get SetupDiOpenDeviceInterfaces failed: " << nRet << std::endl;
+			//std::wcout << L"get SetupDiOpenDeviceInterfaces failed: " << nRet << std::endl;
+			logIt(_T("get SetupDiOpenDeviceInterfaces failed: %d"), nRet);
 		}
 
 		SetupDiDestroyDeviceInfoList(hDevInfo);
@@ -189,7 +193,8 @@ int GetDeviceLocationPaths(TCHAR *HubName, std::wstring &sLocpath)
 	else
 	{
 		nRet = GetLastError();
-		std::wcout << L"get SetupDiCreateDeviceInfoList failed: " << nRet << std::endl;
+		//std::wcout << L"get SetupDiCreateDeviceInfoList failed: " << nRet << std::endl;
+		logIt(_T("get SetupDiCreateDeviceInfoList failed: %d"), nRet);
 	}
 	
 	return nRet;
@@ -209,10 +214,12 @@ int PrintDeivce(std::wstring hubname, int hubport, std::wstring &devicepath) {
 	std::wstring locpath;
 	GetDeviceLocationPaths((TCHAR *)hubname.c_str(), locpath);
 	if (locpath.size() == 0) {
+		logIt(_T("current Felica locationpaths failed"));
 		return ERROR_DEVICE_ENUMERATION_ERROR;
 	}
 	locpath += _T("#USB(") + std::to_wstring(hubport) + _T(")#USBMI(");
-	std::wcout << locpath << std::endl;
+	//std::wcout << locpath << std::endl;
+	logIt(_T("current Felica locationpaths: %s"), locpath.c_str());
 
 	// Define the interface class GUID for the devices you are interested in
 	// Example: GUID_DEVINTERFACE_USB_DEVICE
@@ -223,7 +230,7 @@ int PrintDeivce(std::wstring hubname, int hubport, std::wstring &devicepath) {
 	// Get device information set for the specified interface class
 	HDEVINFO DeviceInfoSet = SetupDiGetClassDevs(&InterfaceClassGuid, NULL, NULL, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
 	if (DeviceInfoSet == INVALID_HANDLE_VALUE) {
-		std::cerr << "Error getting device information set." << std::endl;
+		logIt(_T("Error getting device information set."));
 		return 1;
 	}
 
@@ -247,7 +254,8 @@ int PrintDeivce(std::wstring hubname, int hubport, std::wstring &devicepath) {
 		SP_DEVINFO_DATA devInfoData = { 0 };
 		devInfoData.cbSize = sizeof(SP_DEVINFO_DATA);
 		if (SetupDiGetDeviceInterfaceDetail(DeviceInfoSet, &DeviceInterfaceData, DeviceInterfaceDetailData, requiredSize, NULL, &devInfoData)) {
-			std::wcout << L"Device Path: " << DeviceInterfaceDetailData->DevicePath << std::endl;
+			//std::wcout << L"Device Path: " << DeviceInterfaceDetailData->DevicePath << std::endl;
+			logIt(_T("Device Path: %s"), DeviceInterfaceDetailData->DevicePath);
 			devicepath = DeviceInterfaceDetailData->DevicePath;
 			std::wstringstream wss;
 			wss << std::setw(2) << std::setfill(L'0') << i;
@@ -265,10 +273,13 @@ int PrintDeivce(std::wstring hubname, int hubport, std::wstring &devicepath) {
 				NULL,
 				0)) {
 				TCHAR* DeviceLocationpaths = reinterpret_cast<TCHAR*>(buffer.data());
-				std::wcout << L"get cur    Location Paths: " << DeviceLocationpaths << std::endl;
-				std::wcout << L"get usbhub Location Paths: " << locpath << std::endl;
+				//std::wcout << L"get cur    Location Paths: " << DeviceLocationpaths << std::endl;
+				//std::wcout << L"get usbhub Location Paths: " << locpath << std::endl;
+				logIt(_T("get cur    Location Paths: %s"), DeviceLocationpaths);
+				logIt(_T("get usbhub Location Paths: %s"), locpath.c_str());
 				if (StartsWith(DeviceLocationpaths, locpath)) {
-					std::wcout << L"found " << std::endl;
+					//std::wcout << L"found " << std::endl;
+					logIt(_T("found: %s==>%s"), DeviceLocationpaths, locpath.c_str());
 					break;
 				}
 				else {
@@ -276,7 +287,8 @@ int PrintDeivce(std::wstring hubname, int hubport, std::wstring &devicepath) {
 				}
 			}
 			else {
-				std::wcout << L"get location paths failed: " << GetLastError() << std::endl;
+				//std::wcout << L"get location paths failed: " << GetLastError() << std::endl;
+				logIt(_T("get location paths failed: %d"), GetLastError());
 				devicepath.clear();
 			}
 			/*if (SetupDiGetDeviceProperty(
@@ -296,7 +308,8 @@ int PrintDeivce(std::wstring hubname, int hubport, std::wstring &devicepath) {
 			}*/
 		}
 		else {
-			std::cerr << "Error getting device interface detail." << std::endl;
+			//std::cerr << "Error getting device interface detail." << std::endl;
+			logIt(_T("Error getting device interface detail"));
 		}
 	}
 

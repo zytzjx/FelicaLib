@@ -38,6 +38,7 @@
 
 #include <stdio.h>
 #include <windows.h>
+#include <shlwapi.h>
 #include <tchar.h>
 #include <locale>
 #include <codecvt>
@@ -56,99 +57,35 @@
 #pragma comment(lib, "E:\\Works\\Felica\\Detours\\lib.X32\\detours.lib")
 //#pragma comment(lib, "E:\\Works\\Felica\\Detours\\lib.X32\\syelog.lib")
 #endif
+#pragma comment(lib, "shlwapi.lib")
 
+int glabel = 0;
 static void printserviceinfo(uint16 s);
 static void hexdump(uint8* addr, int n);
 
-/*
-//////////////////////////////////////////////////////////////////////////////
-//
-extern "C" {
-	HANDLE(WINAPI * Real_CreateFileW)(LPCWSTR a0,
-		DWORD a1,
-		DWORD a2,
-		LPSECURITY_ATTRIBUTES a3,
-		DWORD a4,
-		DWORD a5,
-		HANDLE a6)
-		= CreateFileW;
-
-	HANDLE(WINAPI * Real_CreateFileA)(LPCSTR a0,
-		DWORD a1,
-		DWORD a2,
-		LPSECURITY_ATTRIBUTES a3,
-		DWORD a4,
-		DWORD a5,
-		HANDLE a6)
-		= CreateFileA;
-}
-
-
-HANDLE __stdcall Mine_CreateFileA(LPCSTR a0,
-	DWORD a1,
-	DWORD a2,
-	LPSECURITY_ATTRIBUTES a3,
-	DWORD a4,
-	DWORD a5,
-	HANDLE a6)
-{
-	CHAR filename[1024] = { 0 };
-	sprintf_s(filename, "%s", a0);
-	OutputDebugStringA(filename);
-
-	HANDLE rv = 0;
-	__try {
-		rv = Real_CreateFileA(a0, a1, a2, a3, a4, a5, a6);
+std::wstring GetLabelHub(int label){
+	TCHAR apstHome[MAX_PATH];
+	DWORD len = GetEnvironmentVariable(TEXT("APSTHOME"), apstHome, MAX_PATH);
+	if (len == 0) {
+		std::cerr << "Failed to get environment variable APSTHOME. Error: " << GetLastError() << std::endl;
+		return _T("");
 	}
-	__finally {
-		sprintf_s(filename, "%s==>%d", a0, GetLastError());
-		OutputDebugStringA(filename);
-	};
-	return rv;
-}
 
-HANDLE __stdcall Mine_CreateFileW(LPCWSTR a0,
-	DWORD a1,
-	DWORD a2,
-	LPSECURITY_ATTRIBUTES a3,
-	DWORD a4,
-	DWORD a5,
-	HANDLE a6)
-{
-	TCHAR filename[1024] = { 0 };
-	swprintf_s(filename, L"%s", a0);
-	OutputDebugStringW(filename);
+	// 组合文件路径 FelicaCalibration.ini
+	TCHAR iniFilePath[MAX_PATH];
+	PathCombine(iniFilePath, apstHome, TEXT("FelicaCalibration.ini"));
 
-	HANDLE rv = 0;
-	__try {
-		rv = Real_CreateFileW(a0, a1, a2, a3, a4, a5, a6);
+	// 读取INI文件中Section="label", Key=1的Value
+	TCHAR value[1024] = { 0 };
+	GetPrivateProfileString(TEXT("label"), std::to_wstring(label).c_str(), TEXT(""), value, 1024, iniFilePath);
+
+	// 检查是否成功读取
+	if (lstrlen(value) == 0) {
+		std::cerr << "Failed to read the value for key 'x' in section 'label'.\n";
+		return _T("");
 	}
-	__finally {
-		swprintf_s(filename, L"%s==>%d", a0, GetLastError());
-		OutputDebugStringW(filename);
-	};
-	return rv;
+	return value;
 }
-
-// Function to set up the hook
-void SetupHook() {
-	DetourRestoreAfterWith();
-	DetourTransactionBegin();
-	DetourUpdateThread(GetCurrentThread());
-	DetourAttach(&(PVOID&)Real_CreateFileW, Mine_CreateFileW);
-	DetourAttach(&(PVOID&)Real_CreateFileA, Mine_CreateFileA);
-	DetourTransactionCommit();
-}
-
-// Function to remove the hook
-void RemoveHook() {
-	DetourTransactionBegin();
-	DetourUpdateThread(GetCurrentThread());
-	DetourDetach(&(PVOID&)Real_CreateFileW, Mine_CreateFileW);
-	DetourDetach(&(PVOID&)Real_CreateFileA, Mine_CreateFileA);
-	DetourTransactionCommit();
-}
-*/
 
 std::wstring devicename;
 std::string devicenameA;
@@ -165,7 +102,7 @@ int _tmain(int argc, _TCHAR *argv[])
 	cxxopts::Options options(_T("Dump"), _T("Check whether Felica has data"));
 	
 	options.add_options()
-		(_T("label"), _T("device label"), cxxopts::value<int>())
+		(_T("label"), _T("device label"), cxxopts::value<int>()->default_value(_T("0")))
 		(_T("hubname"), _T("usb hub name"), cxxopts::value<std::wstring>())
 		(_T("hubport"), _T("usb hub port"), cxxopts::value<int>()->default_value(_T("0")))
 		(_T("h,help"), _T("Print usage:\n -hubname -hubport -label"));
@@ -184,16 +121,43 @@ int _tmain(int argc, _TCHAR *argv[])
 		hubname = result[_T("hubname")].as<std::wstring>();
 	int hubport = result[_T("hubport")].as<int>();
 	int label = result[_T("label")].as<int>();
+	glabel = label;
 	bool busehubinfo = false;
 
 	//std::wcout << hubname << "@" << hubport << _T("           ") << label << std::endl;
 	//L"USB#VID_2109&PID_2813#6&3183d08&0&1#{f18a0e88-c30c-11d0-8815-00a0c906bed8}"
 	if (!hubname.empty() && hubport!=0){
 		PrintDeivce(hubname, hubport, devicename);
-		std::wcout <<"get device path:" << devicename << std::endl;
+		logIt(_T("get device path: %s"), devicename.c_str());
 		devicenameA = WstringToString(devicename);
 		
 		busehubinfo = !devicename.empty();
+	}
+	if (!busehubinfo && label>0) {
+		auto hubcal = GetLabelHub(label);
+		// 定义分割符
+		wchar_t delimiter = L'@';
+
+		// 查找分割符的位置
+		size_t delimiterPos = hubcal.find(delimiter);
+
+		if (delimiterPos != std::wstring::npos) {
+			// 提取分割符前的部分并转换为int
+			std::wstring intPart = hubcal.substr(0, delimiterPos);
+			int intValue = std::stoi(intPart);
+
+			// 提取分割符后的部分
+			std::wstring stringPart = hubcal.substr(delimiterPos + 1);
+
+			PrintDeivce(hubname, hubport, devicename);
+			logIt(_T("get device path: %s"), devicename.c_str());
+			devicenameA = WstringToString(devicename);
+
+			busehubinfo = !devicename.empty();
+		}
+		else {
+			logIt(_T("Delimiter not found in the input string."));
+		}
 	}
 
 	//return 0;
@@ -212,6 +176,7 @@ int _tmain(int argc, _TCHAR *argv[])
     if (!p)
     {
         _ftprintf(stderr, _T("PaSoRi open failed.\n"));
+		logIt(_T("PaSoRi open failed"));
         exit(1);
     }
     pasori_init(p);
@@ -220,6 +185,7 @@ int _tmain(int argc, _TCHAR *argv[])
     if (!f)
     {
         _ftprintf(stderr, _T("Polling card failed.\n"));
+		logIt(_T("Polling card failed."));
         exit(1);
     }
     _tprintf(_T("# IDm: "));
@@ -235,6 +201,7 @@ int _tmain(int argc, _TCHAR *argv[])
     {
 		SetConsoleTextAttribute(hConsole, FOREGROUND_RED);
 		_tprintf(_T("Felicastatus=notfindfelica\n"));
+		logIt(_T("Felicastatus=notfindfelica"));
 		SetConsoleTextAttribute(hConsole, FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED);
         exit(1);
     }
@@ -285,11 +252,13 @@ int _tmain(int argc, _TCHAR *argv[])
 	if (f->num_system_code > 0 && bServiceData){
 		SetConsoleTextAttribute(hConsole, FOREGROUND_BLUE);
 		_tprintf(_T("Felicastatus=foundfelica\n"));
+		logIt(_T("Felicastatus=foundfelica"));
 		SetConsoleTextAttribute(hConsole, FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED);
 	}
 	else{
 		SetConsoleTextAttribute(hConsole, FOREGROUND_RED);
 		_tprintf(_T("Felicastatus=notfindfelica\n"));
+		logIt(_T("Felicastatus=notfindfelica"));
 		SetConsoleTextAttribute(hConsole, FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED);
 	}
 
