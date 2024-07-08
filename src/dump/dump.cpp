@@ -152,6 +152,7 @@ void RemoveHook() {
 
 std::wstring devicename;
 std::string devicenameA;
+std::list<std::string> FalicaSymblinks;
 std::string WstringToString(const std::wstring& wstr)
 {
 	std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;

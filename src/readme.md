@@ -21,11 +21,12 @@ nmake
 ### Hook API
  &emsp; &emsp;Create Device Symblink , Sony uses CreateFileA. So Only Hook One API is Fine.
 
-### Command line
+### Command line  
+this is Linux command line format. long is two "--"
 ```
--label=1
--hubname="USB#VID_2109&PID_2813#6&3183d08&0&1#{f18a0e88-c30c-11d0-8815-00a0c906bed8}"
--hubport=1
+--label=1
+--hubname="USB#VID_2109&PID_2813#6&3183d08&0&1#{f18a0e88-c30c-11d0-8815-00a0c906bed8}"
+--hubport=1
 ```
 output:  
  &emsp; &emsp;Felicastatus=notfindfelica   

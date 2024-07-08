@@ -4,6 +4,7 @@
 #include <detours.h>
 #include <fstream>
 #include <iostream>
+#include <list>
 #include "hookapi.h"
 
 #pragma comment(lib, "Shlwapi.lib")
@@ -38,14 +39,15 @@ HANDLE __stdcall Mine_CreateFileA(LPCSTR a0,
 	DWORD a5,
 	HANDLE a6)
 {
+	OutputDebugStringA(a0);
 	//\\?\usb#vid_054c&pid_0dc9&mi_00#
 	extern std::string devicenameA;
 	CHAR filename[1024] = { 0 };
 	if (StrStrIA(a0, "\\\\?\\usb#vid_054c&pid_0dc9&mi_00#") != nullptr) {
-		sprintf_s(filename, "%s\\U*00", devicenameA.c_str());
+		extern std::list<std::string> FalicaSymblinks;
+		sprintf_s(filename, "%s\\U*%02d", devicenameA.c_str(), (int)(FalicaSymblinks.size()-1));
 		a0 = filename;
 	}
-	OutputDebugStringA(a0);
 
 	HANDLE rv = 0;
 	try {
@@ -53,7 +55,7 @@ HANDLE __stdcall Mine_CreateFileA(LPCSTR a0,
 	}
 	catch(...) {
 	};
-	sprintf_s(filename, "A:%s==>%d", a0, GetLastError());
+	sprintf_s(filename, "%s==>%d", a0, GetLastError());
 	OutputDebugStringA(filename);
 
 	return rv;

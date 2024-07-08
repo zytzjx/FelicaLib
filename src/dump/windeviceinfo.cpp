@@ -3,6 +3,7 @@
 #include <setupapi.h>
 #include <iostream>
 #include <vector>
+#include <list>
 #include <algorithm>
 #include <initguid.h>
 #include <devpkey.h>
@@ -193,6 +194,15 @@ int GetDeviceLocationPaths(TCHAR *HubName, std::wstring &sLocpath)
 	return nRet;
 }
 
+std::string toUTF8String(const std::wstring& wstr)
+{
+	//s.toUTF8String(result);
+	int size_needed = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), (int)wstr.size(), NULL, 0, NULL, NULL);
+	std::string result(size_needed, 0);
+	WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), (int)wstr.size(), &result[0], size_needed, NULL, NULL);
+
+	return result;
+}
 
 int PrintDeivce(std::wstring hubname, int hubport, std::wstring &devicepath) {
 	std::wstring locpath;
@@ -220,6 +230,8 @@ int PrintDeivce(std::wstring hubname, int hubport, std::wstring &devicepath) {
 	SP_DEVICE_INTERFACE_DATA DeviceInterfaceData;
 	DeviceInterfaceData.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
 
+	extern std::list<std::string> FalicaSymblinks;
+
 	for (DWORD i = 0; SetupDiEnumDeviceInterfaces(DeviceInfoSet, NULL, &InterfaceClassGuid, i, &DeviceInterfaceData); ++i) {
 		// Get the required buffer size
 		DWORD requiredSize = 2048;
@@ -236,6 +248,7 @@ int PrintDeivce(std::wstring hubname, int hubport, std::wstring &devicepath) {
 		if (SetupDiGetDeviceInterfaceDetail(DeviceInfoSet, &DeviceInterfaceData, DeviceInterfaceDetailData, requiredSize, NULL, &devInfoData)) {
 			std::wcout << L"Device Path: " << DeviceInterfaceDetailData->DevicePath << std::endl;
 			devicepath = DeviceInterfaceDetailData->DevicePath;
+			FalicaSymblinks.push_back(toUTF8String(devicepath));
 			DEVPROPTYPE devPropType;
 			if (SetupDiGetDeviceProperty(
 				DeviceInfoSet,
