@@ -176,6 +176,7 @@
   <ItemGroup>
     <ClCompile Include="dump.cpp" />
     <ClCompile Include="hookapi.cpp" />
+    <ClCompile Include="logIt.cpp" />
     <ClCompile Include="windeviceinfo.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -187,6 +188,9 @@
   <ItemGroup>
     <ClInclude Include="cxxopts.hpp" />
     <ClInclude Include="hookapi.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\readme.md" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -28,6 +28,40 @@ extern "C" {
 		DWORD a5,
 		HANDLE a6)
 		= CreateFileA;
+
+	BOOL(WINAPI * Real_DeviceIoControl)(
+		HANDLE       hDevice,
+		DWORD        dwIoControlCode,
+		LPVOID       lpInBuffer,
+		DWORD        nInBufferSize,
+		LPVOID       lpOutBuffer,
+		DWORD        nOutBufferSize,
+		LPDWORD      lpBytesReturned,
+		LPOVERLAPPED lpOverlapped) 
+	= DeviceIoControl;
+
+}
+
+BOOL __stdcall Mine_DeviceIoControl(
+	HANDLE       hDevice,
+	DWORD        dwIoControlCode,
+	LPVOID       lpInBuffer,
+	DWORD        nInBufferSize,
+	LPVOID       lpOutBuffer,
+	DWORD        nOutBufferSize,
+	LPDWORD      lpBytesReturned,
+	LPOVERLAPPED lpOverlapped) {
+	logHex((BYTE *)lpInBuffer, nInBufferSize, (L"Enter DeviceIoControl:"));
+	BOOL b = Real_DeviceIoControl(hDevice,
+		       dwIoControlCode,
+		      lpInBuffer,
+		        nInBufferSize,
+		       lpOutBuffer,
+		        nOutBufferSize,
+		      lpBytesReturned,
+		 lpOverlapped);
+	logHex((BYTE *)lpOutBuffer, nOutBufferSize, (L"Exit DeviceIoControl:"));
+	return b;
 }
 
 HANDLE __stdcall Mine_CreateFileA(LPCSTR a0,
@@ -42,21 +76,35 @@ HANDLE __stdcall Mine_CreateFileA(LPCSTR a0,
 	//\\?\usb#vid_054c&pid_0dc9&mi_00#
 	extern std::string devicenameA;
 	CHAR filename[1024] = { 0 };
+	BOOL bDevice = false;
 	if (StrStrIA(a0, "\\\\?\\usb#vid_054c&pid_0dc9&mi_00#") != nullptr) {
 		//extern int IndexSymblinks;//std::list<std::string> FalicaSymblinks;
-		sprintf_s(filename, "%s", devicenameA.c_str());
-		a0 = filename;
+		//sprintf_s(filename, "%s", devicenameA.c_str());
+		//a0 = filename;
+		bDevice = true;
 	}
 
 	HANDLE rv = 0;
 	try {
-		rv = Real_CreateFileA(a0, a1, a2, a3, a4, a5, a6);
+		if (bDevice) {
+			for (int i = 0; i < 99; i++) {
+				sprintf_s(filename, "%s\\U*%02d", devicenameA.c_str(),i);
+				rv = Real_CreateFileA(filename, a1, a2, a3, a4, a5, a6);
+				if (rv != INVALID_HANDLE_VALUE) {
+					break;
+				}
+			}
+		}
+		else {
+			rv = Real_CreateFileA(a0, a1, a2, a3, a4, a5, a6);
+		}
 	}
 	catch(...) {
 	};
-	sprintf_s(filename, "%s==>%d", a0, GetLastError());
-	OutputDebugStringA(filename);
-
+	if (bDevice) {
+		sprintf_s(filename, "%s==>%d", filename, GetLastError());
+		OutputDebugStringA(filename);
+	}
 	return rv;
 }
 
@@ -94,6 +142,7 @@ void SetupHook() {
 	DetourUpdateThread(GetCurrentThread());
 	//DetourAttach(&(PVOID&)Real_CreateFileW, Mine_CreateFileW);
 	DetourAttach(&(PVOID&)Real_CreateFileA, Mine_CreateFileA);
+	//DetourAttach(&(PVOID&)Real_DeviceIoControl, Mine_DeviceIoControl);
 	DetourTransactionCommit();
 }
 
@@ -103,5 +152,6 @@ void RemoveHook() {
 	DetourUpdateThread(GetCurrentThread());
 	//DetourDetach(&(PVOID&)Real_CreateFileW, Mine_CreateFileW);
 	DetourDetach(&(PVOID&)Real_CreateFileA, Mine_CreateFileA);
+	//DetourAttach(&(PVOID&)Real_DeviceIoControl, Mine_DeviceIoControl);
 	DetourTransactionCommit();
 }

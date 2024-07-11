@@ -257,11 +257,10 @@ int PrintDeivce(std::wstring hubname, int hubport, std::wstring &devicepath) {
 			//std::wcout << L"Device Path: " << DeviceInterfaceDetailData->DevicePath << std::endl;
 			logIt(_T("Device Path: %s"), DeviceInterfaceDetailData->DevicePath);
 			devicepath = DeviceInterfaceDetailData->DevicePath;
-			std::wstringstream wss;
-			wss << std::setw(2) << std::setfill(L'0') << i;
-			devicepath += _T("\\U*")+wss.str();
-			//FalicaSymblinks.push_back(toUTF8String(devicepath));
-			//IndexSymblinks++;
+			//std::wstringstream wss;
+			//wss << std::setw(2) << std::setfill(L'0') << i;
+			//devicepath += _T("\\U*")+wss.str();
+			
 			DEVPROPTYPE devPropType;
 			if (SetupDiGetDeviceProperty(
 				DeviceInfoSet,

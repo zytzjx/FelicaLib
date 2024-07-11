@@ -105,6 +105,7 @@ int _tmain(int argc, _TCHAR *argv[])
 		(_T("label"), _T("device label"), cxxopts::value<int>()->default_value(_T("0")))
 		(_T("hubname"), _T("usb hub name"), cxxopts::value<std::wstring>())
 		(_T("hubport"), _T("usb hub port"), cxxopts::value<int>()->default_value(_T("0")))
+		(_T("d,dump"), _T("dump all data"), cxxopts::value<bool>()->default_value(_T("false")))
 		(_T("h,help"), _T("Print usage:\n -hubname -hubport -label"));
 
 	
@@ -121,6 +122,7 @@ int _tmain(int argc, _TCHAR *argv[])
 		hubname = result[_T("hubname")].as<std::wstring>();
 	int hubport = result[_T("hubport")].as<int>();
 	int label = result[_T("label")].as<int>();
+	bool bDump = result[_T("dump")].as<bool>();
 	glabel = label;
 	bool busehubinfo = false;
 
@@ -160,6 +162,12 @@ int _tmain(int argc, _TCHAR *argv[])
 		}
 	}
 
+	if (devicenameA.empty()&&(label>0|| hubport>0)) {
+		logIt(_T("get device path is empty. reader not connect"));
+		_tprintf(_T("Felicastatus=readernotfind"));
+		exit(1);
+	}
+
 	//return 0;
     pasori* p;
     felica  *f, *f2;
@@ -177,54 +185,68 @@ int _tmain(int argc, _TCHAR *argv[])
     {
         _ftprintf(stderr, _T("PaSoRi open failed.\n"));
 		logIt(_T("PaSoRi open failed"));
-        exit(1);
+		_tprintf(_T("Felicastatus=readernotfind"));
+
+        exit(2);
     }
     pasori_init(p);
     
-    f = felica_polling(p, POLLING_ANY, 0, 0);
-    if (!f)
-    {
-        _ftprintf(stderr, _T("Polling card failed.\n"));
-		logIt(_T("Polling card failed."));
-        exit(1);
-    }
-    _tprintf(_T("# IDm: "));
-    hexdump(f->IDm, 8);
-    _tprintf(_T("\n"));
-    _tprintf(_T("# PMm: "));
-    hexdump(f->PMm, 8);
-    _tprintf(_T("\n\n"));
-    felica_free(f);
+	BOOL bWait = true;
+	do {
+		f = felica_polling(p, POLLING_ANY, 0, 0);
+		if (!f)
+		{
+			_ftprintf(stderr, _T("Polling card failed.\n"));
+			logIt(_T("Polling card failed."));
+			//exit(1);
+			Sleep(250);
+			continue;
+		}
+		bWait = false;
+		/*logIt(_T("# IDm: "));
+		hexdump(f->IDm, 8);*/
+		logHex(f->IDm, 8, _T("# IDm: "));
+		//logIt(_T("\n"));
+		//logIt(_T("# PMm: "));
+		//hexdump(f->PMm, 8);
+		logHex(f->PMm, 8, _T("# PMm: "));
+		//_tprintf(_T("\n\n"));
+		felica_free(f);
+	}while(bWait);
+
 
     f = felica_enum_systemcode(p);
     if (!f)
     {
 		SetConsoleTextAttribute(hConsole, FOREGROUND_RED);
-		_tprintf(_T("Felicastatus=notfindfelica\n"));
-		logIt(_T("Felicastatus=notfindfelica"));
+		_tprintf(_T("Felicastatus=nodata\n"));
+		logIt(_T("Felicastatus=nodata"));
 		SetConsoleTextAttribute(hConsole, FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED);
-        exit(1);
+        exit(0);
     }
 
 	BOOL bServiceData = FALSE;
 
     for (i = 0; i < f->num_system_code; i++)
     {
-        _tprintf(_T("# System code: %04X\n"), N2HS(f->system_code[i]));
+		logIt(_T("# System code: %04X\n"), N2HS(f->system_code[i]));
         f2 = felica_enum_service(p, N2HS(f->system_code[i]));
         if (!f2)
         {
             _ftprintf(stderr, _T("Enum service failed.\n"));
+			logIt(_T("Enum service failed."));
+			_tprintf(_T("Felicastatus=data\n"));
+			logIt(_T("Felicastatus=data"));
             exit(1);
         }
         
-        _tprintf(_T("# Number of area = %d\n"), f2->num_area_code);
+		logIt(_T("# Number of area = %d\n"), f2->num_area_code);
         for (j = 0; j < f2->num_area_code; j++)
         {
-            _tprintf(_T("# Area: %04X - %04X\n"), f2->area_code[j], f2->end_service_code[j]);
+			logIt(_T("# Area: %04X - %04X\n"), f2->area_code[j], f2->end_service_code[j]);
         }            
 
-        _tprintf(_T("# Number of service code = %d\n"), f2->num_service_code);
+		logIt(_T("# Number of service code = %d\n"), f2->num_service_code);
         for (j = 0; j < f2->num_service_code; j++)
         {
             uint16 service = f2->service_code[j];
@@ -239,11 +261,15 @@ int _tmain(int argc, _TCHAR *argv[])
                     break;
                 }
                 
-                _tprintf(_T("%04X:%04X "), service, k);
+				logIt(_T("%04X:%04X "), service, k);
                 hexdump(data, 16);
-                _tprintf(_T("\n"));
+				logIt(_T("\n"));
 				bServiceData = TRUE;
+				if (!bDump) break;
             }
+			if (!bDump && bServiceData) {
+				break;
+			}
         }
         _tprintf(_T("\n"));
         felica_free(f2);
@@ -251,14 +277,14 @@ int _tmain(int argc, _TCHAR *argv[])
 
 	if (f->num_system_code > 0 && bServiceData){
 		SetConsoleTextAttribute(hConsole, FOREGROUND_BLUE);
-		_tprintf(_T("Felicastatus=foundfelica\n"));
-		logIt(_T("Felicastatus=foundfelica"));
+		_tprintf(_T("Felicastatus=data\n"));
+		logIt(_T("Felicastatus=data"));
 		SetConsoleTextAttribute(hConsole, FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED);
 	}
 	else{
 		SetConsoleTextAttribute(hConsole, FOREGROUND_RED);
-		_tprintf(_T("Felicastatus=notfindfelica\n"));
-		logIt(_T("Felicastatus=notfindfelica"));
+		_tprintf(_T("Felicastatus=nodata\n"));
+		logIt(_T("Felicastatus=nodata"));
 		SetConsoleTextAttribute(hConsole, FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED);
 	}
 
@@ -288,20 +314,23 @@ static void printserviceinfo(uint16 s)
         case 11: ident = _T("Purse (Read only)"); break;
         default: ident = _T("INVALID or UNKOWN"); break;
     }
-
-    _tprintf(_T("# Serivce code = %04X : %s"), s, ident);
+	TCHAR buf[1024] = { 0 };
+	_stprintf_s(buf, _T("# Serivce code = %04X : %s"), s, ident);
     if ((s & 0x1) == 0)
     {
-        _tprintf(_T(" (Protected)"));
+		_stprintf_s(buf+_tcslen(buf),100, _T(" (Protected)"));
     }
-    _tprintf(_T("\n"));
+	_stprintf_s(buf + _tcslen(buf),100, _T("\n"));
+	logIt(buf);
 }
 
 static void hexdump(uint8* addr, int n)
 {
     int i;
+	TCHAR buf[1024] = { 0 };
     for (i = 0; i < n; i++)
     {
-        _tprintf(_T("%02X "), addr[i]);
+		_stprintf_s(buf+i*3, 1000-i*3, _T("%02X "), addr[i]);
     }
+	logIt(buf);
 }

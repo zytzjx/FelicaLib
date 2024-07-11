@@ -5,6 +5,7 @@ void RemoveHook();
 int PrintDeivce(std::wstring hubname, int hubport, std::wstring &devicepath);
 
 void logIt(TCHAR* fmt, ...);
+void logHex(BYTE* buffer, size_t buf_sz, TCHAR *Title);
 
 VOID
 Oops
@@ -13,6 +14,7 @@ Oops
 	ULONG Line,
 	DWORD dwError
 );
+
 
 #define OOPS()		Oops(_T(__FILE__), __LINE__, GetLastError())
 #define OOPSERR(d)	Oops(_T(__FILE__), __LINE__, d)
