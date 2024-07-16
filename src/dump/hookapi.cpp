@@ -77,7 +77,7 @@ HANDLE __stdcall Mine_CreateFileA(LPCSTR a0,
 	extern std::string devicenameA;
 	CHAR filename[1024] = { 0 };
 	BOOL bDevice = false;
-	if (StrStrIA(a0, "\\\\?\\usb#vid_054c&pid_0dc9&mi_00#") != nullptr) {
+	if (StrStrIA(a0, "\\\\?\\usb#vid_054c&pid_0dc") != nullptr) {
 		//extern int IndexSymblinks;//std::list<std::string> FalicaSymblinks;
 		//sprintf_s(filename, "%s", devicenameA.c_str());
 		//a0 = filename;

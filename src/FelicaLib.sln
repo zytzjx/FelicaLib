@@ -1,6 +1,8 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.34031.82
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FelicaDump", "dump\FelicaDump.vcxproj", "{4FBA68A2-C69E-4B45-86D0-C4409C2D0516}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nanaco", "nanaco\nanaco.vcxproj", "{AD192DAF-D89C-41D8-950C-1B6DBC4D4EFF}"
@@ -10,6 +12,11 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "suica", "suica\suica.vcxproj", "{C547D062-D5A6-42CD-AF26-7A24FB814FA1}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "edy", "edy\edy.vcxproj", "{9BD1C7B0-88F0-4864-A17F-690CDECDFEB6}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{48D6E220-D460-455F-A964-6F9E8D7B9E5E}"
+	ProjectSection(SolutionItems) = preProject
+		readme.md = readme.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -62,5 +69,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F081A0C6-CC54-4715-9001-B28705A17B88}
 	EndGlobalSection
 EndGlobal
