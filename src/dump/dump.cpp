@@ -102,11 +102,11 @@ int _tmain(int argc, _TCHAR *argv[])
 	cxxopts::Options options(_T("Dump"), _T("Check whether Felica has data"));
 	
 	options.add_options()
-		(_T("label"), _T("device label"), cxxopts::value<int>()->default_value(_T("0")))
-		(_T("hubname"), _T("usb hub name"), cxxopts::value<std::wstring>())
-		(_T("hubport"), _T("usb hub port"), cxxopts::value<int>()->default_value(_T("0")))
+		(_T("l,label"), _T("device label"), cxxopts::value<int>()->default_value(_T("0")))
+		(_T("n,hubname"), _T("usb hub name"), cxxopts::value<std::wstring>())
+		(_T("p,hubport"), _T("usb hub port"), cxxopts::value<int>()->default_value(_T("0")))
 		(_T("d,dump"), _T("dump all data"), cxxopts::value<bool>()->default_value(_T("false")))
-		(_T("h,help"), _T("Print usage:\n -hubname -hubport -label"));
+		(_T("h,help"), _T("Print usage:\n --hubname XXX --hubport XXX --label XXX"));
 
 	
 	auto result = options.parse(argc, argv);
@@ -150,8 +150,9 @@ int _tmain(int argc, _TCHAR *argv[])
 
 			// 提取分割符后的部分
 			std::wstring stringPart = hubcal.substr(delimiterPos + 1);
+			//logIt(_T("label path: %s==> %s"), intPart.c_str(), stringPart.c_str());
 
-			PrintDeivce(hubname, hubport, devicename);
+			PrintDeivce(stringPart, intValue, devicename);
 			logIt(_T("get device path: %s"), devicename.c_str());
 			devicenameA = WstringToString(devicename);
 
