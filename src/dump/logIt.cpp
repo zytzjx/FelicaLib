@@ -14,7 +14,7 @@ Oops(
 {
 	TCHAR szBuf[2048] = { 0 };
 
-	_stprintf_s(szBuf, _T("[LABEL_%d]File: %ws, Line %d, Error %d\n"), glabel, File, Line, dwError);
+	_stprintf_s(szBuf, _T("[LABEL_%d][Felica]: File: %ws, Line %d, Error %d\n"), glabel, File, Line, dwError);
 	OutputDebugString(szBuf);
 }
 
@@ -27,7 +27,7 @@ void logIt(TCHAR* fmt, ...)
 	vswprintf_s(&buffer[0], size, fmt, args); // Format the string
 	va_end(args);
 
-	std::wstring formattedString = L"[Label_" + std::to_wstring(glabel) + L"]: " + buffer;
+	std::wstring formattedString = L"[Label_" + std::to_wstring(glabel) + L"][Felica]: " + buffer;
 	OutputDebugString(formattedString.c_str());
 }
 

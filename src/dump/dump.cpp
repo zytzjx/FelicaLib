@@ -39,6 +39,7 @@
 #include <stdio.h>
 #include <windows.h>
 #include <shlwapi.h>
+#include <mmsystem.h>
 #include <tchar.h>
 #include <locale>
 #include <codecvt>
@@ -50,6 +51,8 @@
 
 #include "cxxopts.hpp"
 
+#include "resource.h"
+
 #ifdef _WIN64
 #pragma comment(lib, "E:\\Works\\Felica\\Detours\\lib.X64\\detours.lib")
 //#pragma comment(lib, "E:\\Works\\Felica\\Detours\\lib.X64\\syelog.lib")
@@ -58,6 +61,7 @@
 //#pragma comment(lib, "E:\\Works\\Felica\\Detours\\lib.X32\\syelog.lib")
 #endif
 #pragma comment(lib, "shlwapi.lib")
+#pragma comment(lib, "winmm.lib")
 
 int glabel = 0;
 static void printserviceinfo(uint16 s);
@@ -106,6 +110,7 @@ int _tmain(int argc, _TCHAR *argv[])
 		(_T("n,hubname"), _T("usb hub name"), cxxopts::value<std::wstring>())
 		(_T("p,hubport"), _T("usb hub port"), cxxopts::value<int>()->default_value(_T("0")))
 		(_T("d,dump"), _T("dump all data"), cxxopts::value<bool>()->default_value(_T("false")))
+		(_T("s,sound"), _T("reader get card sound"), cxxopts::value<bool>()->default_value(_T("false")))
 		(_T("h,help"), _T("Print usage:\n --hubname XXX --hubport XXX --label XXX"));
 
 	
@@ -123,6 +128,7 @@ int _tmain(int argc, _TCHAR *argv[])
 	int hubport = result[_T("hubport")].as<int>();
 	int label = result[_T("label")].as<int>();
 	bool bDump = result[_T("dump")].as<bool>();
+	bool bSound = result[_T("sound")].as<bool>();
 	glabel = label;
 	bool busehubinfo = false;
 
@@ -165,6 +171,9 @@ int _tmain(int argc, _TCHAR *argv[])
 
 	if (devicenameA.empty()&&(label>0|| hubport>0)) {
 		logIt(_T("get device path is empty. reader not connect"));
+		if (bSound) {
+			PlaySound(MAKEINTRESOURCE(IDR_WAVE1), GetModuleHandle(NULL), SND_RESOURCE | SND_SYNC);
+		}
 		_tprintf(_T("Felicastatus=readernotfind"));
 		exit(1);
 	}
@@ -186,13 +195,19 @@ int _tmain(int argc, _TCHAR *argv[])
     {
         _ftprintf(stderr, _T("PaSoRi open failed.\n"));
 		logIt(_T("PaSoRi open failed"));
+		if (bSound) {
+			PlaySound(MAKEINTRESOURCE(IDR_WAVE1), GetModuleHandle(NULL), SND_RESOURCE | SND_SYNC);
+		}
 		_tprintf(_T("Felicastatus=readernotfind"));
 
         exit(2);
     }
     pasori_init(p);
-    
+
+RETRY:
+
 	BOOL bWait = true;
+
 	do {
 		f = felica_polling(p, POLLING_ANY, 0, 0);
 		if (!f)
@@ -217,14 +232,26 @@ int _tmain(int argc, _TCHAR *argv[])
 
 
     f = felica_enum_systemcode(p);
-    if (!f)
+	while (!f)
+	{
+		Sleep(500);
+		f = felica_enum_systemcode(p);
+	} 
+	if (f->num_system_code == 0) {
+		felica_free(f);
+		goto RETRY;
+	}
+	/*if (!f)
     {
 		SetConsoleTextAttribute(hConsole, FOREGROUND_RED);
 		_tprintf(_T("Felicastatus=nodata\n"));
 		logIt(_T("Felicastatus=nodata"));
+		if (bSound) {
+			PlaySound(MAKEINTRESOURCE(IDR_WAVE1), GetModuleHandle(NULL), SND_RESOURCE | SND_SYNC);
+		}
 		SetConsoleTextAttribute(hConsole, FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED);
         exit(0);
-    }
+    }*/
 
 	BOOL bServiceData = FALSE;
 
@@ -238,6 +265,9 @@ int _tmain(int argc, _TCHAR *argv[])
 			logIt(_T("Enum service failed."));
 			_tprintf(_T("Felicastatus=data\n"));
 			logIt(_T("Felicastatus=data"));
+			if (bSound) {
+				PlaySound(MAKEINTRESOURCE(IDR_WAVE1), GetModuleHandle(NULL), SND_RESOURCE | SND_SYNC);
+			}
             exit(1);
         }
         
@@ -281,12 +311,18 @@ int _tmain(int argc, _TCHAR *argv[])
 		_tprintf(_T("Felicastatus=data\n"));
 		logIt(_T("Felicastatus=data"));
 		SetConsoleTextAttribute(hConsole, FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED);
+		if (bSound) {
+			PlaySound(MAKEINTRESOURCE(IDR_WAVE1), GetModuleHandle(NULL), SND_RESOURCE | SND_SYNC);
+		}
 	}
 	else{
 		SetConsoleTextAttribute(hConsole, FOREGROUND_RED);
 		_tprintf(_T("Felicastatus=nodata\n"));
 		logIt(_T("Felicastatus=nodata"));
 		SetConsoleTextAttribute(hConsole, FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED);
+		if (bSound) {
+			PlaySound(MAKEINTRESOURCE(IDR_WAVE1), GetModuleHandle(NULL), SND_RESOURCE | SND_SYNC);
+		}
 	}
 
     felica_free(f);
