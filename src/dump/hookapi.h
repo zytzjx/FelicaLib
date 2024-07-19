@@ -4,6 +4,9 @@ void SetupHook();
 void RemoveHook();
 int PrintDeivce(std::wstring hubname, int hubport, std::wstring &devicepath);
 
+std::wstring GetDeviceInstanceIDFromHubPort(const std::wstring& hubName, int portNumber);
+int RunExe(std::wstring instanceid);
+
 void logIt(TCHAR* fmt, ...);
 void logHex(BYTE* buffer, size_t buf_sz, TCHAR *Title);
 
