@@ -10,6 +10,8 @@
 #include <devpkey.h>
 #include <Cfgmgr32.h>
 #include <string>
+#include <devguid.h>
+#include <Usbiodef.h>
 #include "hookapi.h"
 
 #pragma comment(lib, "setupapi.lib")
@@ -315,4 +317,131 @@ int PrintDeivce(std::wstring hubname, int hubport, std::wstring &devicepath) {
 	// Clean up
 	SetupDiDestroyDeviceInfoList(DeviceInfoSet);
 	return 0;
+}
+
+std::wstring ToLower(const std::wstring& str) {
+	std::wstring result = str;
+	std::transform(result.begin(), result.end(), result.begin(), towlower);
+	return result;
+}
+
+// 忽略大小写的查找函数
+size_t CaseInsensitiveFind(const std::wstring& str, const std::wstring& substr) {
+	std::wstring lowerStr = ToLower(str);
+	std::wstring lowerSubstr = ToLower(substr);
+	std::replace(lowerSubstr.begin(), lowerSubstr.end(), L'\\', L'#');
+	return lowerStr.find(lowerSubstr);
+}
+
+std::wstring GetDeviceInstanceIDFromHubPort(const std::wstring& hubName, int portNumber) {
+
+	logIt(_T("GetDeviceInstanceIDFromHubPort++ %d@%s"), portNumber, hubName.c_str());
+
+	HDEVINFO deviceInfoSet = SetupDiGetClassDevs(&GUID_DEVINTERFACE_USB_DEVICE, nullptr, nullptr, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
+	if (deviceInfoSet == INVALID_HANDLE_VALUE) {
+		logIt(_T("Failed to get device info set"));
+		return L"";
+	}
+
+	SP_DEVINFO_DATA deviceInfoData;
+	deviceInfoData.cbSize = sizeof(SP_DEVINFO_DATA);
+	SP_DEVICE_INTERFACE_DATA deviceInterfaceData;
+	deviceInterfaceData.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
+
+	for (DWORD i = 0; SetupDiEnumDeviceInterfaces(deviceInfoSet, nullptr, &GUID_DEVINTERFACE_USB_DEVICE, i, &deviceInterfaceData); ++i) {
+		DWORD requiredSize = 0;
+		SetupDiGetDeviceInterfaceDetail(deviceInfoSet, &deviceInterfaceData, nullptr, 0, &requiredSize, nullptr);
+
+		std::vector<BYTE> buffer(requiredSize);
+		PSP_DEVICE_INTERFACE_DETAIL_DATA deviceInterfaceDetailData = reinterpret_cast<PSP_DEVICE_INTERFACE_DETAIL_DATA>(&buffer[0]);
+		deviceInterfaceDetailData->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
+
+		if (!SetupDiGetDeviceInterfaceDetail(deviceInfoSet, &deviceInterfaceData, deviceInterfaceDetailData, requiredSize, nullptr, &deviceInfoData)) {
+			logIt(_T("Failed to get device interface detail"));
+			continue;
+		}
+
+		WCHAR deviceInstanceID[MAX_DEVICE_ID_LEN];
+		if (CM_Get_Device_ID(deviceInfoData.DevInst, deviceInstanceID, MAX_DEVICE_ID_LEN, 0) != CR_SUCCESS) {
+			logIt(_T("Failed to get device instance ID"));
+			continue;
+		}
+		// Get the parent device (the hub) of the USB device
+		DEVINST parentDevInst;
+		if (CM_Get_Parent(&parentDevInst, deviceInfoData.DevInst, 0) != CR_SUCCESS) {
+			logIt(_T("Failed to get parent device"));
+			continue;
+		}
+
+		WCHAR parentDeviceInstanceID[MAX_DEVICE_ID_LEN];
+		if (CM_Get_Device_ID(parentDevInst, parentDeviceInstanceID, MAX_DEVICE_ID_LEN, 0) != CR_SUCCESS) {
+			logIt(_T("Failed to get parent device instance ID"));
+			continue;
+		}
+
+		std::wstring parentID(parentDeviceInstanceID);
+		logIt(_T("parent Instanceid: %s"), parentDeviceInstanceID);
+		if (CaseInsensitiveFind(hubName, parentID) != std::wstring::npos) {
+			logIt(_T("parent Instanceidcompare: %s"), parentDeviceInstanceID);
+
+			DWORD port;
+			ULONG len = sizeof(DWORD);
+			if (CM_Get_DevNode_Registry_Property(deviceInfoData.DevInst, CM_DRP_ADDRESS, nullptr, &port, &len, 0) == CR_SUCCESS) {
+				if (port == portNumber) {
+					SetupDiDestroyDeviceInfoList(deviceInfoSet);
+					return deviceInstanceID;
+				}
+			}
+		}
+	}
+
+	SetupDiDestroyDeviceInfoList(deviceInfoSet);
+	return L"";
+}
+
+int RunExe(std::wstring instanceid){
+	// 定义要运行的命令和参数
+	std::wstring cmd = L"pnputil.exe /restart-device  \"";
+	cmd += instanceid;
+	cmd += L"\"";
+	// 定义启动信息和进程信息结构体
+	STARTUPINFO si;
+	PROCESS_INFORMATION pi;
+
+
+	logIt(_T("RunExe: %s"), cmd.c_str());
+	// 初始化启动信息结构体
+	ZeroMemory(&si, sizeof(si));
+	si.cb = sizeof(si);
+	ZeroMemory(&pi, sizeof(pi));
+	int nRet = ERROR_SUCCESS;
+	// 创建新进程
+	if (!CreateProcess(
+		NULL,            // 应用程序名称
+		const_cast<LPWSTR>(cmd.c_str()), // 命令行参数
+		NULL,            // 进程安全属性
+		NULL,            // 主线程安全属性
+		FALSE,           // 继承句柄标志
+		0,               // 创建标志
+		NULL,            // 环境变量
+		NULL,            // 当前目录
+		&si,             // 启动信息
+		&pi)) {          // 进程信息
+		nRet = GetLastError();
+		std::cerr << "CreateProcess failed (" << nRet << ").\n";
+		return nRet;
+	}
+
+	// 等待进程结束
+	if (WaitForSingleObject(pi.hProcess, 10 * 1000) != WAIT_OBJECT_0) {
+		nRet = GetLastError();
+	}
+
+	// 关闭进程和线程句柄
+	CloseHandle(pi.hProcess);
+	CloseHandle(pi.hThread);
+
+	std::cout << "pnputil.exe executed successfully." << std::endl;
+
+	return nRet;
 }

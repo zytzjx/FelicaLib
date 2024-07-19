@@ -132,6 +132,7 @@ int _tmain(int argc, _TCHAR *argv[])
 	glabel = label;
 	bool busehubinfo = false;
 
+ENUMDEVICE:
 	//std::wcout << hubname << "@" << hubport << _T("           ") << label << std::endl;
 	//L"USB#VID_2109&PID_2813#6&3183d08&0&1#{f18a0e88-c30c-11d0-8815-00a0c906bed8}"
 	if (!hubname.empty() && hubport!=0){
@@ -152,13 +153,13 @@ int _tmain(int argc, _TCHAR *argv[])
 		if (delimiterPos != std::wstring::npos) {
 			// 提取分割符前的部分并转换为int
 			std::wstring intPart = hubcal.substr(0, delimiterPos);
-			int intValue = std::stoi(intPart);
+			hubport = std::stoi(intPart);
 
 			// 提取分割符后的部分
-			std::wstring stringPart = hubcal.substr(delimiterPos + 1);
+			hubname = hubcal.substr(delimiterPos + 1);
 			//logIt(_T("label path: %s==> %s"), intPart.c_str(), stringPart.c_str());
 
-			PrintDeivce(stringPart, intValue, devicename);
+			PrintDeivce(hubname, hubport, devicename);
 			logIt(_T("get device path: %s"), devicename.c_str());
 			devicenameA = WstringToString(devicename);
 
@@ -170,12 +171,19 @@ int _tmain(int argc, _TCHAR *argv[])
 	}
 
 	if (devicenameA.empty()&&(label>0|| hubport>0)) {
-		logIt(_T("get device path is empty. reader not connect"));
-		if (bSound) {
-			PlaySound(MAKEINTRESOURCE(IDR_WAVE1), GetModuleHandle(NULL), SND_RESOURCE | SND_SYNC);
+
+		auto felicaparentid = GetDeviceInstanceIDFromHubPort(hubname, hubport);
+		if (felicaparentid.empty()) {
+			logIt(_T("get device path is empty. reader not connect"));
+			if (bSound) {
+				PlaySound(MAKEINTRESOURCE(IDR_WAVE1), GetModuleHandle(NULL), SND_RESOURCE | SND_SYNC);
+			}
+			_tprintf(_T("Felicastatus=readernotfind"));
+			exit(1);
 		}
-		_tprintf(_T("Felicastatus=readernotfind"));
-		exit(1);
+		RunExe(felicaparentid);
+		Sleep(500);
+		goto ENUMDEVICE;
 	}
 
 	//return 0;
