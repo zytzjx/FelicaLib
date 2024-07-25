@@ -66,6 +66,7 @@
 int glabel = 0;
 static void printserviceinfo(uint16 s);
 static void hexdump(uint8* addr, int n);
+static void PrintID(TCHAR* key, uint8* addr, int n);
 
 std::wstring GetLabelHub(int label){
 	TCHAR apstHome[MAX_PATH];
@@ -230,10 +231,12 @@ RETRY:
 		/*logIt(_T("# IDm: "));
 		hexdump(f->IDm, 8);*/
 		logHex(f->IDm, 8, _T("# IDm: "));
+		PrintID(_T("IDm"), f->IDm, 8);
 		//logIt(_T("\n"));
 		//logIt(_T("# PMm: "));
 		//hexdump(f->PMm, 8);
 		logHex(f->PMm, 8, _T("# PMm: "));
+		PrintID(_T("PMm"), f->PMm, 8);
 		//_tprintf(_T("\n\n"));
 		felica_free(f);
 	}while(bWait);
@@ -378,4 +381,15 @@ static void hexdump(uint8* addr, int n)
 		_stprintf_s(buf+i*3, 1000-i*3, _T("%02X "), addr[i]);
     }
 	logIt(buf);
+}
+
+static void PrintID(TCHAR* key, uint8* addr, int n)
+{
+	int i;
+	TCHAR buf[1024] = { 0 };
+	for (i = 0; i < n; i++)
+	{
+		_stprintf_s(buf + i * 2, 1000 - i * 2, _T("%02X"), addr[i]);
+	}
+	_tprintf(_T("%s=%s\r\n"), key, buf);
 }

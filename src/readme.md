@@ -31,3 +31,8 @@ this is Linux command line format. long is two "--"
 output:  
  &emsp; &emsp;Felicastatus=notfindfelica   
  &emsp; &emsp;Felicastatus=foundfelica
+
+
+## Notice  
+	// USB\VID_054C&PID_06C3\0513115 //this is s380 Not supported. It is deprecated produce.
+

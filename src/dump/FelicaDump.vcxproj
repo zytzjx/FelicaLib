@@ -188,9 +188,17 @@
   <ItemGroup>
     <ClInclude Include="cxxopts.hpp" />
     <ClInclude Include="hookapi.h" />
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\readme.md" />
+    <None Include="idr_wave.bin" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="FelicaDump.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Media Include="Notification.wav" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
