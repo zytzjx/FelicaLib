@@ -293,6 +293,7 @@ RETRY:
         {
             uint16 service = f2->service_code[j];
             printserviceinfo(service);
+			if ((service & 0x1) == 0) continue;
 
             for (k = 0; k < 255; k++)
             {
