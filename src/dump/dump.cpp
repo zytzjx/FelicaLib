@@ -54,10 +54,10 @@
 #include "resource.h"
 
 #ifdef _WIN64
-#pragma comment(lib, "E:\\Works\\Felica\\Detours\\lib.X64\\detours.lib")
+#pragma comment(lib, "C:\\projects\\Detours\\lib.X64\\detours.lib")
 //#pragma comment(lib, "E:\\Works\\Felica\\Detours\\lib.X64\\syelog.lib")
 #else
-#pragma comment(lib, "E:\\Works\\Felica\\Detours\\lib.X32\\detours.lib")
+#pragma comment(lib, "C:\\projects\\Detours\\lib.X32\\detours.lib")
 //#pragma comment(lib, "E:\\Works\\Felica\\Detours\\lib.X32\\syelog.lib")
 #endif
 #pragma comment(lib, "shlwapi.lib")
@@ -192,13 +192,14 @@ ENUMDEVICE:
     felica  *f, *f2;
     int i, j, k;
 	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+	int servicenum = 0;
 
 	setlocale(LC_ALL, "Japanese");
 
 	if (busehubinfo) {
 		SetupHook();
 	}
-
+CREATEDEVICE:
     p = pasori_open(NULL);
     if (!p)
     {
@@ -243,14 +244,18 @@ RETRY:
 
 
     f = felica_enum_systemcode(p);
-	while (!f)
+	while (f==nullptr)
 	{
 		Sleep(500);
 		f = felica_enum_systemcode(p);
 	} 
 	if (f->num_system_code == 0) {
-		felica_free(f);
-		goto RETRY;
+		logIt(_T("number of service == 0,retry"));
+		servicenum++;
+		if (servicenum < 5) {
+			felica_free(f);
+			goto RETRY;
+		}
 	}
 	/*if (!f)
     {
@@ -266,6 +271,7 @@ RETRY:
 
 	BOOL bServiceData = FALSE;
 
+	logIt(_T("# Number of service = %d"), f->num_system_code);
     for (i = 0; i < f->num_system_code; i++)
     {
 		logIt(_T("# System code: %04X\n"), N2HS(f->system_code[i]));
@@ -274,12 +280,16 @@ RETRY:
         {
             _ftprintf(stderr, _T("Enum service failed.\n"));
 			logIt(_T("Enum service failed."));
-			_tprintf(_T("Felicastatus=data\n"));
-			logIt(_T("Felicastatus=data"));
-			if (bSound) {
-				PlaySound(MAKEINTRESOURCE(IDR_WAVE1), GetModuleHandle(NULL), SND_RESOURCE | SND_SYNC);
-			}
-            exit(1);
+			//_tprintf(_T("Felicastatus=data\n"));
+			//logIt(_T("Felicastatus=data"));
+			//if (bSound) {
+			//	PlaySound(MAKEINTRESOURCE(IDR_WAVE1), GetModuleHandle(NULL), SND_RESOURCE | SND_SYNC);
+			//}
+            //exit(1);
+			felica_free(f);
+			pasori_close(p);
+			Sleep(250);
+			goto CREATEDEVICE;
         }
         
 		logIt(_T("# Number of area = %d\n"), f2->num_area_code);
